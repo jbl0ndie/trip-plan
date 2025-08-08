@@ -1,0 +1,468 @@
+/* Reset and Base Styles */
+* {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+}
+
+body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+    background-color: #f8fafc;
+    color: #2d3748;
+    line-height: 1.6;
+    overflow-x: hidden;
+}
+
+#app {
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+}
+
+/* Header */
+.app-header {
+    background: white;
+    padding: 1rem;
+    border-bottom: 1px solid #e2e8f0;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+    position: sticky;
+    top: 0;
+    z-index: 100;
+}
+
+.app-header h1 {
+    color: #1a202c;
+    font-size: 1.25rem;
+    font-weight: 600;
+    flex: 1;
+    text-align: center;
+}
+
+.btn-icon {
+    background: none;
+    border: none;
+    padding: 0.5rem;
+    cursor: pointer;
+    border-radius: 0.5rem;
+    color: #4a5568;
+    transition: all 0.15s ease;
+}
+
+.btn-icon:hover {
+    background-color: #f7fafc;
+    color: #2d3748;
+}
+
+/* Screens */
+#main-content {
+    flex: 1;
+    position: relative;
+    overflow: hidden;
+}
+
+.screen {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    padding-bottom: 80px; /* Space for bottom nav */
+    transform: translateX(100%);
+    transition: transform 0.3s ease-in-out;
+    opacity: 0;
+    overflow-y: auto;
+}
+
+.screen.active {
+    transform: translateX(0);
+    opacity: 1;
+}
+
+.screen.prev {
+    transform: translateX(-100%);
+}
+
+/* Buttons */
+.btn {
+    padding: 0.75rem 1rem;
+    border: none;
+    border-radius: 0.5rem;
+    font-size: 1rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.15s ease;
+    width: 100%;
+    text-align: center;
+}
+
+.btn-primary {
+    background-color: #4299e1;
+    color: white;
+}
+
+.btn-primary:hover {
+    background-color: #3182ce;
+}
+
+.btn-secondary {
+    background-color: #e2e8f0;
+    color: #4a5568;
+}
+
+.btn-secondary:hover {
+    background-color: #cbd5e0;
+}
+
+.btn-secondary:disabled {
+    background-color: #f7fafc;
+    color: #a0aec0;
+    cursor: not-allowed;
+}
+
+.btn-outline {
+    background-color: transparent;
+    color: #4299e1;
+    border: 2px solid #4299e1;
+}
+
+.btn-outline:hover {
+    background-color: #4299e1;
+    color: white;
+}
+
+/* Home Screen */
+.trip-header {
+    background: white;
+    padding: 1.5rem;
+    border-radius: 0.75rem;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+    margin-bottom: 1.5rem;
+}
+
+.trip-header h2 {
+    font-size: 1.5rem;
+    font-weight: 600;
+    margin-bottom: 1rem;
+    color: #1a202c;
+}
+
+.trip-dates {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.trip-dates input {
+    flex: 1;
+    padding: 0.75rem;
+    border: 1px solid #e2e8f0;
+    border-radius: 0.5rem;
+    font-size: 1rem;
+}
+
+.trip-dates span {
+    color: #718096;
+    font-weight: 500;
+}
+
+.itinerary-list {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+    margin-bottom: 2rem;
+}
+
+.itinerary-card {
+    background: white;
+    padding: 1.5rem;
+    border-radius: 0.75rem;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+    cursor: pointer;
+    transition: all 0.15s ease;
+    border: 2px solid transparent;
+}
+
+.itinerary-card:hover {
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+.itinerary-card.selected {
+    border-color: #4299e1;
+}
+
+.itinerary-card h3 {
+    font-size: 1.25rem;
+    font-weight: 600;
+    margin-bottom: 0.5rem;
+    color: #1a202c;
+}
+
+.itinerary-meta {
+    display: flex;
+    justify-content: space-between;
+    color: #718096;
+    font-size: 0.875rem;
+}
+
+.action-buttons {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+}
+
+/* Bottom Navigation */
+.bottom-nav {
+    background: white;
+    border-top: 1px solid #e2e8f0;
+    padding: 0.5rem;
+    display: flex;
+    justify-content: space-around;
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    z-index: 100;
+}
+
+.nav-item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.25rem;
+    padding: 0.5rem;
+    background: none;
+    border: none;
+    cursor: pointer;
+    color: #718096;
+    transition: color 0.15s ease;
+    border-radius: 0.5rem;
+}
+
+.nav-item.active {
+    color: #4299e1;
+}
+
+.nav-item span {
+    font-size: 0.75rem;
+    font-weight: 500;
+}
+
+/* Itinerary Grid */
+.itineraries-grid {
+    display: flex;
+    gap: 1rem;
+    overflow-x: auto;
+    padding-bottom: 1rem;
+}
+
+.itinerary-column {
+    min-width: 300px;
+    background: white;
+    border-radius: 0.5rem;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+    padding: 1rem;
+}
+
+.itinerary-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1rem;
+    padding-bottom: 0.5rem;
+    border-bottom: 1px solid #e2e8f0;
+}
+
+.itinerary-title {
+    font-size: 1.125rem;
+    font-weight: 600;
+    color: #1a202c;
+}
+
+.itinerary-controls {
+    display: flex;
+    gap: 0.25rem;
+}
+
+.btn-small {
+    padding: 0.25rem 0.5rem;
+    font-size: 0.75rem;
+}
+
+/* Trip Settings */
+.trip-settings {
+    background: #f7fafc;
+    padding: 0.75rem;
+    border-radius: 0.375rem;
+    margin-bottom: 1rem;
+}
+
+.trip-settings input {
+    width: 100%;
+    padding: 0.5rem;
+    border: 1px solid #cbd5e0;
+    border-radius: 0.25rem;
+    margin-top: 0.25rem;
+}
+
+.trip-settings label {
+    font-size: 0.875rem;
+    font-weight: 500;
+    color: #4a5568;
+}
+
+/* Itinerary Days */
+.itinerary-days {
+    margin-bottom: 1rem;
+}
+
+.day-entry {
+    margin-bottom: 0.75rem;
+    padding: 0.75rem;
+    background: #f9fafb;
+    border-radius: 0.375rem;
+    border: 1px solid #e5e7eb;
+}
+
+.day-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 0.5rem;
+}
+
+.day-label {
+    font-weight: 600;
+    color: #374151;
+}
+
+.location-input {
+    width: 100%;
+    padding: 0.5rem;
+    border: 1px solid #d1d5db;
+    border-radius: 0.25rem;
+    margin-bottom: 0.5rem;
+}
+
+.driving-time {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 0.875rem;
+    color: #6b7280;
+}
+
+.time-estimate {
+    font-weight: 500;
+}
+
+.add-day-btn {
+    width: 100%;
+    padding: 0.75rem;
+    border: 2px dashed #cbd5e0;
+    background: transparent;
+    color: #6b7280;
+    border-radius: 0.375rem;
+    cursor: pointer;
+    font-size: 0.875rem;
+    transition: all 0.15s ease;
+}
+
+.add-day-btn:hover {
+    border-color: #9ca3af;
+    color: #4b5563;
+}
+
+/* Summary */
+.itinerary-summary {
+    background: #f0f9ff;
+    padding: 0.75rem;
+    border-radius: 0.375rem;
+    border: 1px solid #bfdbfe;
+}
+
+.summary-item {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 0.25rem;
+    font-size: 0.875rem;
+}
+
+.summary-item:last-child {
+    margin-bottom: 0;
+    font-weight: 600;
+    border-top: 1px solid #93c5fd;
+    padding-top: 0.5rem;
+    margin-top: 0.5rem;
+}
+
+.summary-value {
+    font-weight: 500;
+}
+
+/* Comparison View */
+.comparison-view {
+    background: white;
+    border-radius: 0.5rem;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+    padding: 2rem;
+}
+
+.comparison-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 1rem;
+}
+
+.comparison-table th,
+.comparison-table td {
+    padding: 0.75rem;
+    text-align: left;
+    border-bottom: 1px solid #e2e8f0;
+}
+
+.comparison-table th {
+    background: #f7fafc;
+    font-weight: 600;
+    color: #2d3748;
+}
+
+/* Status indicators */
+.status-good {
+    color: #38a169;
+}
+
+.status-warning {
+    color: #d69e2e;
+}
+
+.status-error {
+    color: #e53e3e;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+    .app-header {
+        flex-direction: column;
+        gap: 1rem;
+        align-items: stretch;
+    }
+
+    .header-controls {
+        justify-content: center;
+    }
+
+    .itineraries-grid {
+        flex-direction: column;
+    }
+
+    .itinerary-column {
+        min-width: 100%;
+    }
+
+    #main-content {
+        padding: 1rem;
+    }
+}
