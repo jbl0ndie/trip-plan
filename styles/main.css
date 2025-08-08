@@ -49,6 +49,34 @@ body {
     border-radius: 0.5rem;
     color: #4a5568;
     transition: all 0.15s ease;
+    font-size: 1.2rem;
+}
+
+.btn-icon:hover {
+    background-color: #f7fafc;
+    color: #2d3748;
+}
+
+/* Main Content */
+#main-content {
+    flex: 1;
+    overflow-y: auto;
+}
+
+.main-container {
+    padding: 1rem;
+    max-width: 1200px;
+    margin: 0 auto;
+}
+
+.btn-icon {
+    background: none;
+    border: none;
+    padding: 0.5rem;
+    cursor: pointer;
+    border-radius: 0.5rem;
+    color: #4a5568;
+    transition: all 0.15s ease;
 }
 
 .btn-icon:hover {
@@ -133,7 +161,7 @@ body {
     color: white;
 }
 
-/* Home Screen */
+/* Trip Header */
 .trip-header {
     background: white;
     padding: 1.5rem;
@@ -153,6 +181,7 @@ body {
     display: flex;
     align-items: center;
     gap: 0.5rem;
+    margin-bottom: 0.5rem;
 }
 
 .trip-dates input {
@@ -168,86 +197,393 @@ body {
     font-weight: 500;
 }
 
-.itinerary-list {
-    display: flex;
-    flex-direction: column;
-    gap: 1rem;
+.trip-summary {
+    text-align: center;
+    margin-top: 0.5rem;
+}
+
+.duration-display {
+    color: #4a5568;
+    font-weight: 500;
+    font-size: 0.875rem;
+}
+
+/* Itineraries Container */
+.itineraries-container {
+    display: grid;
+    gap: 1.5rem;
     margin-bottom: 2rem;
 }
 
+/* Itinerary Card */
 .itinerary-card {
     background: white;
-    padding: 1.5rem;
     border-radius: 0.75rem;
     box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
-    cursor: pointer;
+    overflow: hidden;
     transition: all 0.15s ease;
     border: 2px solid transparent;
 }
 
-.itinerary-card:hover {
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
-}
-
 .itinerary-card.selected {
     border-color: #4299e1;
+    box-shadow: 0 4px 12px rgba(66, 153, 225, 0.15);
 }
 
-.itinerary-card h3 {
-    font-size: 1.25rem;
-    font-weight: 600;
-    margin-bottom: 0.5rem;
-    color: #1a202c;
+.itinerary-card.compare-mode {
+    cursor: pointer;
 }
 
-.itinerary-meta {
+.itinerary-header {
+    background: #f8fafc;
+    padding: 1rem 1.5rem;
+    border-bottom: 1px solid #e2e8f0;
     display: flex;
     justify-content: space-between;
-    color: #718096;
-    font-size: 0.875rem;
+    align-items: center;
 }
 
-.action-buttons {
-    display: flex;
-    flex-direction: column;
-    gap: 1rem;
+.itinerary-name-input {
+    font-size: 1.25rem;
+    font-weight: 600;
+    color: #1a202c;
+    background: transparent;
+    border: none;
+    flex: 1;
+    margin-right: 1rem;
 }
 
-/* Bottom Navigation */
-.bottom-nav {
+.itinerary-name-input:focus {
+    outline: none;
     background: white;
-    border-top: 1px solid #e2e8f0;
-    padding: 0.5rem;
-    display: flex;
-    justify-content: space-around;
-    position: fixed;
-    bottom: 0;
-    left: 0;
-    right: 0;
-    z-index: 100;
+    padding: 0.25rem 0.5rem;
+    border-radius: 0.375rem;
+    box-shadow: 0 0 0 3px rgba(66, 153, 225, 0.1);
 }
 
-.nav-item {
+.itinerary-actions {
     display: flex;
-    flex-direction: column;
+    gap: 0.5rem;
+}
+
+.itinerary-body {
+    padding: 1.5rem;
+}
+
+.location-list {
+    margin-bottom: 1rem;
+}
+
+.location-item {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    padding: 0.75rem 0;
+    border-bottom: 1px solid #f7fafc;
+}
+
+.location-item:last-child {
+    border-bottom: none;
+}
+
+.location-day {
+    background: #edf2f7;
+    color: #4a5568;
+    padding: 0.25rem 0.5rem;
+    border-radius: 0.375rem;
+    font-size: 0.875rem;
+    font-weight: 500;
+    min-width: 60px;
+    text-align: center;
+}
+
+.location-name {
+    flex: 1;
+    font-size: 1rem;
+    font-weight: 500;
+    color: #2d3748;
+    background: transparent;
+    border: none;
+    padding: 0.25rem;
+    border-radius: 0.375rem;
+}
+
+.location-name:focus {
+    outline: none;
+    background: #f7fafc;
+    box-shadow: 0 0 0 2px rgba(66, 153, 225, 0.1);
+}
+
+.location-name::placeholder {
+    color: #a0aec0;
+    font-style: italic;
+}
+
+.location-details {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    font-size: 0.875rem;
+    color: #718096;
+}
+
+.location-nights, .location-drive-time {
+    display: flex;
     align-items: center;
     gap: 0.25rem;
-    padding: 0.5rem;
+}
+
+.location-nights input, .location-drive-time input {
+    width: 50px;
+    text-align: center;
+    background: transparent;
+    border: none;
+    font-size: 0.875rem;
+    color: #4a5568;
+    font-weight: 500;
+}
+
+.location-nights input:focus, .location-drive-time input:focus {
+    outline: none;
+    background: #f7fafc;
+    border-radius: 0.25rem;
+}
+
+.location-remove {
+    color: #e53e3e;
     background: none;
     border: none;
     cursor: pointer;
-    color: #718096;
-    transition: color 0.15s ease;
+    padding: 0.25rem;
+    border-radius: 0.25rem;
+    opacity: 0.6;
+    transition: opacity 0.15s ease;
+}
+
+.location-remove:hover {
+    opacity: 1;
+    background: #fed7d7;
+}
+
+.add-location-btn {
+    width: 100%;
+    padding: 0.75rem;
+    background: #f8fafc;
+    border: 2px dashed #cbd5e0;
     border-radius: 0.5rem;
-}
-
-.nav-item.active {
-    color: #4299e1;
-}
-
-.nav-item span {
-    font-size: 0.75rem;
+    color: #4a5568;
     font-weight: 500;
+    cursor: pointer;
+    transition: all 0.15s ease;
+    margin-bottom: 1rem;
+}
+
+.add-location-btn:hover {
+    background: #edf2f7;
+    border-color: #a0aec0;
+}
+
+.itinerary-summary {
+    background: #f8fafc;
+    padding: 1rem;
+    border-radius: 0.5rem;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 0.875rem;
+}
+
+.summary-stat {
+    text-align: center;
+}
+
+.summary-stat .label {
+    display: block;
+    color: #718096;
+    margin-bottom: 0.25rem;
+}
+
+.summary-stat .value {
+    font-weight: 600;
+    color: #1a202c;
+    font-size: 1.125rem;
+}
+
+/* Main Actions */
+.main-actions {
+    display: flex;
+    gap: 1rem;
+    justify-content: center;
+    flex-wrap: wrap;
+}
+
+/* Comparison View */
+.comparison-view {
+    background: white;
+    border-radius: 0.75rem;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+    margin-top: 2rem;
+    overflow: hidden;
+}
+
+.comparison-view.hidden {
+    display: none;
+}
+
+.comparison-header {
+    background: #f8fafc;
+    padding: 1rem 1.5rem;
+    border-bottom: 1px solid #e2e8f0;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.comparison-header h3 {
+    font-size: 1.25rem;
+    font-weight: 600;
+    color: #1a202c;
+    margin: 0;
+}
+
+.comparison-table {
+    padding: 1.5rem;
+    overflow-x: auto;
+}
+
+.comparison-grid {
+    display: grid;
+    gap: 1rem;
+    min-width: 600px;
+}
+
+.comparison-row {
+    display: grid;
+    grid-template-columns: 150px repeat(auto-fit, minmax(200px, 1fr));
+    gap: 1rem;
+    align-items: center;
+    padding: 0.75rem 0;
+    border-bottom: 1px solid #f7fafc;
+}
+
+.comparison-row:last-child {
+    border-bottom: none;
+}
+
+.comparison-label {
+    font-weight: 500;
+    color: #4a5568;
+}
+
+.comparison-value {
+    padding: 0.5rem;
+    background: #f8fafc;
+    border-radius: 0.375rem;
+    text-align: center;
+    font-weight: 500;
+    color: #2d3748;
+}
+
+.comparison-value.best {
+    background: #c6f6d5;
+    color: #22543d;
+}
+
+/* Hidden class */
+.hidden {
+    display: none !important;
+}
+
+/* Responsive Design */
+@media (min-width: 768px) {
+    .main-container {
+        padding: 2rem;
+    }
+    
+    .itineraries-container {
+        grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
+    }
+    
+    .main-actions {
+        flex-direction: row;
+        justify-content: center;
+    }
+    
+    .btn {
+        width: auto;
+        min-width: 150px;
+    }
+
+    .location-item {
+        gap: 1.5rem;
+    }
+
+    .location-details {
+        gap: 1.5rem;
+    }
+}
+
+@media (min-width: 1024px) {
+    .itineraries-container {
+        grid-template-columns: repeat(auto-fit, minmax(450px, 1fr));
+        max-width: none;
+    }
+
+    .comparison-row {
+        grid-template-columns: 180px repeat(auto-fit, minmax(220px, 1fr));
+    }
+}
+
+/* Drag and Drop (for future enhancement) */
+.location-item.dragging {
+    opacity: 0.5;
+}
+
+.location-item.drag-over {
+    border-top: 2px solid #4299e1;
+}
+
+/* Focus and accessibility */
+button:focus,
+input:focus {
+    outline: none;
+    box-shadow: 0 0 0 3px rgba(66, 153, 225, 0.1);
+}
+
+/* Loading states */
+.loading {
+    opacity: 0.6;
+    pointer-events: none;
+}
+
+/* Animation for adding/removing items */
+.location-item.removing {
+    animation: slideOut 0.3s ease-out forwards;
+}
+
+@keyframes slideOut {
+    to {
+        transform: translateX(100%);
+        opacity: 0;
+        height: 0;
+        padding: 0;
+        margin: 0;
+    }
+}
+
+.location-item.adding {
+    animation: slideIn 0.3s ease-out;
+}
+
+@keyframes slideIn {
+    from {
+        transform: translateX(-100%);
+        opacity: 0;
+    }
+    to {
+        transform: translateX(0);
+        opacity: 1;
+    }
 }
 
 /* Itinerary Grid */
