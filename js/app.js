@@ -377,9 +377,9 @@ class TripPlannerApp {
         
         if (this.tripStartDate && this.tripEndDate) {
             const days = Utils.calculateDaysBetween(this.tripStartDate, this.tripEndDate);
-            durationElement.textContent = `${days} day${days !== 1 ? 's' : ''}`;
+            durationElement.textContent = `${days} night${days !== 1 ? 's' : ''}`;
         } else {
-            durationElement.textContent = '0 days';
+            durationElement.textContent = '0 nights';
         }
     }
 }
