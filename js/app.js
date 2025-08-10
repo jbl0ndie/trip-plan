@@ -20,6 +20,25 @@ class TripPlannerApp {
         // Load saved data from localStorage
         this.itineraries = StorageManager.loadItineraries();
         
+        // If no itineraries exist, create a sample one for testing
+        if (this.itineraries.length === 0) {
+            const sampleItinerary = new Itinerary();
+            sampleItinerary.name = 'Sample Itinerary';
+            sampleItinerary.addLocation({
+                name: 'Sydney',
+                day: 1,
+                nights: 2,
+                drivingTime: 0
+            });
+            sampleItinerary.addLocation({
+                name: 'Melbourne', 
+                day: 2,
+                nights: 3,
+                drivingTime: 540
+            });
+            this.itineraries.push(sampleItinerary);
+        }
+        
         // Load trip dates
         const tripData = StorageManager.loadTripData();
         this.tripStartDate = tripData.startDate || '';
@@ -36,36 +55,78 @@ class TripPlannerApp {
         this.updateTripDuration();
     }
 
-    bindEvents() {
+    bindEvents() {        
         // Trip date changes
-        document.getElementById('trip-start').addEventListener('change', (e) => {
-            this.tripStartDate = e.target.value;
-            this.saveTripData();
-            this.updateTripDuration();
-        });
+        const tripStart = document.getElementById('trip-start');
+        const tripEnd = document.getElementById('trip-end');
+        
+        if (tripStart) {
+            tripStart.addEventListener('change', (e) => {
+                this.tripStartDate = e.target.value;
+                this.saveTripData();
+                this.updateTripDuration();
+            });
+        }
 
-        document.getElementById('trip-end').addEventListener('change', (e) => {
-            this.tripEndDate = e.target.value;
-            this.saveTripData();
-            this.updateTripDuration();
-        });
+        if (tripEnd) {
+            tripEnd.addEventListener('change', (e) => {
+                this.tripEndDate = e.target.value;
+                this.saveTripData();
+                this.updateTripDuration();
+            });
+        }
 
         // Main action buttons
-        document.getElementById('add-itinerary-btn').addEventListener('click', () => {
-            this.addItinerary();
-        });
+        const addBtn = document.getElementById('add-itinerary-btn');
+        const compareBtn = document.getElementById('compare-mode-btn');
+        const exportBtn = document.getElementById('export-btn');
 
-        document.getElementById('compare-mode-btn').addEventListener('click', () => {
-            this.toggleCompareMode();
-        });
+        if (addBtn) {
+            addBtn.addEventListener('click', () => {
+                this.addItinerary();
+            });
+        }
 
-        document.getElementById('export-btn').addEventListener('click', () => {
-            this.exportSelectedItinerary();
-        });
+        if (compareBtn) {
+            compareBtn.addEventListener('click', () => {
+                this.toggleCompareMode();
+            });
+        }
+
+        if (exportBtn) {
+            exportBtn.addEventListener('click', () => {
+                this.exportSelectedItinerary();
+            });
+        }
 
         // Comparison view
-        document.getElementById('close-comparison-btn').addEventListener('click', () => {
-            this.hideComparison();
+        const closeComparisonBtn = document.getElementById('close-comparison-btn');
+        if (closeComparisonBtn) {
+            closeComparisonBtn.addEventListener('click', () => {
+                this.hideComparison();
+            });
+        }
+
+        // Event delegation for dynamically created buttons
+        document.addEventListener('click', (e) => {
+            if (e.target.classList.contains('add-location-btn')) {
+                const card = e.target.closest('.itinerary-card');
+                const itineraryId = card.dataset.itineraryId;
+                this.addLocationToItinerary(itineraryId);
+            }
+        });
+
+        // Event delegation for location input changes
+        const self = this; // Preserve 'this' context
+        document.addEventListener('input', (e) => {
+            if (e.target.closest('.location-item')) {
+                const locationItem = e.target.closest('.location-item');
+                const card = locationItem.closest('.itinerary-card');
+                const itineraryId = card.dataset.itineraryId;
+                const locationId = locationItem.dataset.locationId;
+                
+                self.updateLocationData(itineraryId, locationId, e.target);
+            }
         });
     }
 
@@ -92,6 +153,97 @@ class TripPlannerApp {
         }, 100);
     }
 
+    addLocationToItinerary(itineraryId) {
+        const itinerary = this.itineraries.find(it => it.id === itineraryId);
+        if (!itinerary) return;
+
+        const newLocation = {
+            name: '',
+            day: itinerary.locations.length + 1,
+            nights: 1,
+            drivingTime: 0
+        };
+
+        itinerary.addLocation(newLocation);
+        this.saveItineraries();
+        this.render();
+
+        // Focus on the new location name input
+        setTimeout(() => {
+            const card = document.querySelector(`[data-itinerary-id="${itineraryId}"]`);
+            const locationInputs = card.querySelectorAll('.location-name');
+            const lastInput = locationInputs[locationInputs.length - 1];
+            if (lastInput) lastInput.focus();
+        }, 100);
+    }
+
+    updateLocationData(itineraryId, locationId, inputElement) {
+        const itinerary = this.itineraries.find(it => it.id === itineraryId);
+        if (!itinerary) return;
+        
+        const location = itinerary.locations.find(loc => loc.id === locationId);
+        if (!location) return;
+        
+        // Update the location data based on the input type
+        if (inputElement.classList.contains('location-name')) {
+            location.name = inputElement.value;
+        } else if (inputElement.type === 'number') {
+            if (inputElement.closest('.location-nights')) {
+                location.nights = parseInt(inputElement.value) || 0;
+            } else if (inputElement.closest('.location-drive-time')) {
+                location.drivingTime = parseInt(inputElement.value) || 0;
+            }
+        }
+        
+        // Recalculate totals and update UI
+        itinerary.updateCalculations();
+        this.saveItineraries();
+        
+        // Re-render just the summary for this itinerary
+        this.updateItinerarySummary(itineraryId);
+    }
+
+    updateItinerarySummary(itineraryId) {
+        const itinerary = this.itineraries.find(it => it.id === itineraryId);
+        if (!itinerary) return;
+        
+        const card = document.querySelector(`[data-itinerary-id="${itineraryId}"]`);
+        if (!card) return;
+        
+        const summary = card.querySelector('.itinerary-summary');
+        if (summary) {
+            summary.innerHTML = `
+                <div class="summary-stat">
+                    <span class="label">Locations</span>
+                    <span class="value">${itinerary.locations.length}</span>
+                </div>
+                <div class="summary-stat">
+                    <span class="label">Nights</span>
+                    <span class="value">${itinerary.getTotalNights()}</span>
+                </div>
+                <div class="summary-stat">
+                    <span class="label">Drive Time</span>
+                    <span class="value">${Utils.formatDriveTime(itinerary.getTotalDriveTime())}</span>
+                </div>
+            `;
+        }
+    }
+
+    toggleCompareMode() {
+        console.log('Toggle compare mode - not implemented yet');
+    }
+
+    exportSelectedItinerary() {
+        console.log('Export selected itinerary - not implemented yet');
+    }
+
+    hideComparison() {
+        const comparisonView = document.getElementById('comparison-view');
+        if (comparisonView) {
+            comparisonView.classList.add('hidden');
+        }
+    }
+
     updateItineraryName(itineraryId, newName) {
         const itinerary = this.itineraries.find(it => it.id === itineraryId);
         if (itinerary) {
@@ -111,9 +263,15 @@ class TripPlannerApp {
 
     renderItineraries() {
         const container = document.getElementById('itineraries-container');
+        
+        if (!container) {
+            console.error('Could not find itineraries-container element');
+            return;
+        }
+        
         container.innerHTML = '';
 
-        this.itineraries.forEach(itinerary => {
+        this.itineraries.forEach((itinerary) => {
             const card = this.createItineraryCard(itinerary);
             container.appendChild(card);
         });
@@ -162,7 +320,6 @@ class TripPlannerApp {
     createLocationHTML(itineraryId, location) {
         return `
             <div class="location-item" data-location-id="${location.id}">
-                <div class="location-day">Day ${location.day}</div>
                 <input type="text" class="location-name" value="${location.name}" 
                        placeholder="Enter location">
                 <div class="location-details">
@@ -189,6 +346,7 @@ class TripPlannerApp {
 
     updateTripDuration() {
         const durationElement = document.getElementById('trip-duration');
+        
         if (this.tripStartDate && this.tripEndDate) {
             const days = Utils.calculateDaysBetween(this.tripStartDate, this.tripEndDate);
             durationElement.textContent = `${days} day${days !== 1 ? 's' : ''}`;
@@ -200,5 +358,9 @@ class TripPlannerApp {
 
 // Initialize app when DOM is loaded
 document.addEventListener('DOMContentLoaded', () => {
-    window.app = new TripPlannerApp();
+    try {
+        window.app = new TripPlannerApp();
+    } catch (error) {
+        console.error('Error creating app:', error);
+    }
 });

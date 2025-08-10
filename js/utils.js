@@ -152,8 +152,6 @@ class Utils {
         }, duration);
     }
 }
-    return new Date(startDate) <= new Date(endDate);
-}
 
 // Debounce function for input handling
 function debounce(func, wait) {
