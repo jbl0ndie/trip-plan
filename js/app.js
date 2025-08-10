@@ -113,6 +113,12 @@ class TripPlannerApp {
                 const card = e.target.closest('.itinerary-card');
                 const itineraryId = card.dataset.itineraryId;
                 this.addLocationToItinerary(itineraryId);
+            } else if (e.target.classList.contains('location-remove')) {
+                const locationItem = e.target.closest('.location-item');
+                const card = locationItem.closest('.itinerary-card');
+                const itineraryId = card.dataset.itineraryId;
+                const locationId = locationItem.dataset.locationId;
+                this.removeLocationFromItinerary(itineraryId, locationId);
             }
         });
 
@@ -175,6 +181,28 @@ class TripPlannerApp {
             const lastInput = locationInputs[locationInputs.length - 1];
             if (lastInput) lastInput.focus();
         }, 100);
+    }
+
+    removeLocationFromItinerary(itineraryId, locationId) {
+        const itinerary = this.itineraries.find(it => it.id === itineraryId);
+        if (!itinerary) return;
+
+        // Don't allow removing the last location - ensure at least one remains
+        if (itinerary.locations.length <= 1) {
+            Utils.showToast('Cannot remove the last location from an itinerary', 'warning');
+            return;
+        }
+
+        // Remove the location from the itinerary
+        const locationIndex = itinerary.locations.findIndex(loc => loc.id === locationId);
+        if (locationIndex > -1) {
+            itinerary.locations.splice(locationIndex, 1);
+            
+            // Update calculations and save
+            itinerary.updateCalculations();
+            this.saveItineraries();
+            this.render();
+        }
     }
 
     updateLocationData(itineraryId, locationId, inputElement) {
