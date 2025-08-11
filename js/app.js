@@ -846,7 +846,14 @@ class TripPlannerApp {
             return;
         }
 
-        const locations = itinerary.locations.filter(loc => loc.name.trim() !== '');
+        const locations = itinerary.locations.filter(loc => {
+            const name = loc.name.trim();
+            // Only include locations with meaningful names (not empty or placeholder text)
+            return name !== '' && 
+                   name !== 'New Location' && 
+                   name !== 'Enter location' && 
+                   name.length >= 2; // At least 2 characters for a real location
+        });
         const loadingEl = mapElement.parentElement.querySelector('.map-loading');
         
         try {
