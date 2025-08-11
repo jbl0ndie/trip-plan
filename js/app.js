@@ -918,9 +918,22 @@ class TripPlannerApp {
                         });
 
                         const marker = L.marker([lat, lng], { icon: customIcon }).addTo(map);
-                        marker.bindPopup(`<strong>${location.name}</strong><br>
-                            ${location.nights > 0 ? `${location.nights} night${location.nights !== 1 ? 's' : ''}<br>` : ''}
-                            Day ${location.day || i + 1}`);
+                        
+                        // Create popup content based on location type
+                        let popupContent = `<strong>${location.name}</strong><br>`;
+                        if (isFirst) {
+                            popupContent += 'Start<br>';
+                        } else if (isLast) {
+                            popupContent += 'End<br>';
+                        } else {
+                            // Middle locations show nights if > 0
+                            if (location.nights > 0) {
+                                popupContent += `${location.nights} night${location.nights !== 1 ? 's' : ''}<br>`;
+                            }
+                        }
+                        popupContent += `Day ${location.day || i + 1}`;
+                        
+                        marker.bindPopup(popupContent);
                         markers.push(marker);
                     } else {
                         console.warn(`No results found for: ${location.name}`);
