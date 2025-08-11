@@ -173,6 +173,8 @@ class TripPlannerApp {
                 const card = draggedElement.closest('.itinerary-card');
                 draggedItineraryId = card.dataset.itineraryId;
                 
+                // Add visual feedback classes
+                draggedElement.classList.add('dragging');
                 draggedElement.style.opacity = '0.5';
                 e.dataTransfer.effectAllowed = 'move';
                 e.dataTransfer.setData('text/html', draggedElement.outerHTML);
@@ -181,6 +183,8 @@ class TripPlannerApp {
 
         document.addEventListener('dragend', (e) => {
             if (e.target.classList.contains('drag-handle') && draggedElement) {
+                // Remove visual feedback
+                draggedElement.classList.remove('dragging');
                 draggedElement.style.opacity = '';
                 draggedElement = null;
                 draggedItineraryId = null;

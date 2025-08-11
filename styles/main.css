@@ -610,10 +610,15 @@ body {
     opacity: 0.5;
     transform: rotate(2deg);
     z-index: 1000;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
 }
 
-.location-item.drag-over {
-    border-top: 2px solid #4299e1;
+.location-item.drop-zone {
+    border: 2px solid #4299e1;
+    background-color: #f0f9ff;
+    border-radius: 0.375rem;
+    transform: scale(1.02);
+    transition: all 0.2s ease;
 }
 
 .location-list.drop-zone {
