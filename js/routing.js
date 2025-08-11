@@ -127,6 +127,30 @@ class RoutingService {
                     reasons.push('in UK/Europe region');
                 }
                 
+                // Population weighting for tie-breaking (Fleet, Hampshire has ~38,000 people)
+                if (props.population) {
+                    const pop = parseInt(props.population);
+                    if (pop > 100000) {
+                        score += 15;
+                        reasons.push(`large town/city (${pop.toLocaleString()})`);
+                    } else if (pop > 30000) {
+                        score += 10;
+                        reasons.push(`substantial town (${pop.toLocaleString()})`);
+                    } else if (pop > 10000) {
+                        score += 5;
+                        reasons.push(`medium town (${pop.toLocaleString()})`);
+                    }
+                }
+                
+                // Administrative level bonus (lower levels = more important places)
+                if (props.admin_level) {
+                    const level = parseInt(props.admin_level);
+                    if (level <= 8) {
+                        score += Math.max(0, 10 - level); // Level 6 gets +4, level 8 gets +2
+                        reasons.push(`admin level ${level}`);
+                    }
+                }
+                
                 // Boost if name matches closely
                 const name = props.name || '';
                 if (name.toLowerCase().includes(locationName.toLowerCase())) {
@@ -157,21 +181,41 @@ class RoutingService {
                     score, 
                     name: props.name,
                     type: `${props.osm_key}:${props.osm_value}`,
+                    population: props.population ? parseInt(props.population) : null,
+                    location: `${coords[1].toFixed(4)}, ${coords[0].toFixed(4)}`,
                     reasons,
                     rank: index + 1
                 };
             });
             
-            // Sort by score (highest first) and take the best match
-            scoredResults.sort((a, b) => b.score - a.score);
+            // Sort by score first, then by population for tie-breaking
+            scoredResults.sort((a, b) => {
+                if (b.score !== a.score) return b.score - a.score; // Primary: score
+                if (b.population && a.population) return b.population - a.population; // Tie-break: population
+                if (b.population && !a.population) return 1; // Prefer entries with population data
+                if (!b.population && a.population) return -1;
+                return 0; // Equal
+            });
             
             console.log(`🔍 Geocoding "${locationName}" - analyzing ${data.features.length} results:`);
             scoredResults.forEach((result, index) => {
                 const prefix = index === 0 ? '✅ SELECTED' : `   Option ${index + 1}`;
-                console.log(`${prefix}: "${result.name}" (${result.type}) - Score: ${result.score} - ${result.reasons.join(', ')}`);
+                const popInfo = result.population ? ` | Pop: ${result.population.toLocaleString()}` : ' | No pop data';
+                console.log(`${prefix}: "${result.name}" (${result.type}) - Score: ${result.score}${popInfo} | ${result.location}`);
+                console.log(`     Reasons: ${result.reasons.join(', ')}`);
             });
             
+            // Check for ties and show alternatives
             const bestMatch = scoredResults[0];
+            const ties = scoredResults.filter(r => r.score === bestMatch.score);
+            if (ties.length > 1) {
+                console.warn(`⚠️ Found ${ties.length} locations with same score (${bestMatch.score}). Selected based on population/order.`);
+                ties.forEach((tie, index) => {
+                    const popInfo = tie.population ? ` (pop: ${tie.population.toLocaleString()})` : ' (no pop data)';
+                    console.warn(`   ${index === 0 ? 'SELECTED' : 'Alternative'}: ${tie.name}${popInfo} at ${tie.location}`);
+                });
+            }
+            
             const feature = bestMatch.feature;
             return {
                 lat: feature.geometry.coordinates[1],
