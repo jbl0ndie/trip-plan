@@ -63,7 +63,8 @@ class RoutingService {
     // Primary geocoding service - Photon (no CORS issues)
     async tryPhotonGeocoding(locationName) {
         // Prioritize cities and towns by adding type filters and increasing limit
-        const url = `https://photon.komoot.io/api/?q=${encodeURIComponent(locationName)}&limit=5&osm_tag=place:city&osm_tag=place:town&osm_tag=place:village&osm_tag=boundary:administrative`;
+        // Add UK/Europe geographical bounds to prefer local results
+        const url = `https://photon.komoot.io/api/?q=${encodeURIComponent(locationName)}&limit=5&osm_tag=place:city&osm_tag=place:town&osm_tag=place:village&osm_tag=boundary:administrative&bbox=-10,49,2,61`;
         
         // Add timeout to prevent hanging requests
         const controller = new AbortController();
@@ -115,6 +116,15 @@ class RoutingService {
                 } else if (props.osm_value === 'village') {
                     score += 20;
                     reasons.push('is a village');
+                }
+                
+                // UK/Europe regional bonus to prefer local places (prevents Fleet, TN USA)
+                const coords = feature.geometry.coordinates; // [lng, lat]
+                const lng = coords[0];
+                const lat = coords[1];
+                if (lng >= -10 && lng <= 2 && lat >= 49 && lat <= 61) {
+                    score += 25;
+                    reasons.push('in UK/Europe region');
                 }
                 
                 // Boost if name matches closely

@@ -334,8 +334,8 @@ class TripPlannerApp {
             this.updateLocationInputs(itineraryId);
             
             // Show detailed success message with route information
-            const routeInfo = this.getRouteInfoSummary(itinerary);
-            Utils.showToast(`Drive times calculated successfully!\n\n${routeInfo}`, 'success');
+            const routeInfo = this.getRouteInfoSummary(result);
+            Utils.showToast(`Drive times calculated successfully!${routeInfo}`, 'success');
 
         } catch (error) {
             console.error('Failed to calculate drive times:', error);
@@ -427,17 +427,26 @@ class TripPlannerApp {
     }
 
     getRouteInfoSummary(itinerary) {
-        if (itinerary.locations.length < 2) return 'No routes calculated';
-        
-        const routes = [];
-        for (let i = 1; i < itinerary.locations.length; i++) {
-            const from = itinerary.locations[i - 1];
-            const to = itinerary.locations[i];
-            const time = Utils.formatDriveTime(to.drivingTime);
-            routes.push(`${from.name} → ${to.name}: ${time}`);
+        if (!itinerary || !itinerary.locations || itinerary.locations.length < 2) {
+            return '';
         }
         
-        return 'Calculated routes:\n' + routes.join('\n');
+        const routeDescriptions = [];
+        
+        for (let i = 1; i < itinerary.locations.length; i++) {
+            const fromLocation = itinerary.locations[i - 1];
+            const toLocation = itinerary.locations[i];
+            
+            if (fromLocation.name && toLocation.name && toLocation.drivingTime > 0) {
+                const driveTimeFormatted = Utils.formatDriveTime(toLocation.drivingTime);
+                routeDescriptions.push(`${fromLocation.name} → ${toLocation.name}: ${driveTimeFormatted}`);
+            }
+        }
+        
+        if (routeDescriptions.length === 0) return '';
+        
+        const summary = routeDescriptions.join('\n• ');
+        return `\n\nCalculated routes:\n• ${summary}`;
     }
 
     updateItineraryName(itineraryId, newName) {
