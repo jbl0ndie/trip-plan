@@ -324,7 +324,7 @@ class TripPlannerApp {
 
         try {
             console.log('Starting drive time calculation for itinerary:', itineraryId);
-            await this.routingService.calculateItineraryDrivingTimes(itinerary);
+            const result = await this.routingService.calculateItineraryDrivingTimes(itinerary);
             console.log('Drive time calculation completed');
             
             this.saveItineraries();
@@ -333,7 +333,9 @@ class TripPlannerApp {
             // Update just the location inputs without full re-render
             this.updateLocationInputs(itineraryId);
             
-            Utils.showToast('Drive times calculated successfully!', 'success');
+            // Show detailed success message with route information
+            const routeInfo = this.getRouteInfoSummary(itinerary);
+            Utils.showToast(`Drive times calculated successfully!\n\n${routeInfo}`, 'success');
 
         } catch (error) {
             console.error('Failed to calculate drive times:', error);
@@ -422,6 +424,20 @@ class TripPlannerApp {
         display.style.display = 'inline';
         input.style.display = 'none';
         editButton.style.display = 'inline';
+    }
+
+    getRouteInfoSummary(itinerary) {
+        if (itinerary.locations.length < 2) return 'No routes calculated';
+        
+        const routes = [];
+        for (let i = 1; i < itinerary.locations.length; i++) {
+            const from = itinerary.locations[i - 1];
+            const to = itinerary.locations[i];
+            const time = Utils.formatDriveTime(to.drivingTime);
+            routes.push(`${from.name} → ${to.name}: ${time}`);
+        }
+        
+        return 'Calculated routes:\n' + routes.join('\n');
     }
 
     updateItineraryName(itineraryId, newName) {
