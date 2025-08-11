@@ -6,8 +6,11 @@ class TripPlannerApp {
         this.isCompareMode = false;
         this.tripStartDate = '';
         this.tripEndDate = '';
+        this.routingService = new RoutingService();
         
         this.initializeApp();
+        this.bindEvents();
+        this.render();
     }
 
     initializeApp() {
@@ -119,6 +122,10 @@ class TripPlannerApp {
                 const itineraryId = card.dataset.itineraryId;
                 const locationId = locationItem.dataset.locationId;
                 this.removeLocationFromItinerary(itineraryId, locationId);
+            } else if (e.target.classList.contains('calculate-drive-times-btn')) {
+                const card = e.target.closest('.itinerary-card');
+                const itineraryId = card.dataset.itineraryId;
+                this.calculateDriveTimes(itineraryId);
             }
         });
 
@@ -272,6 +279,98 @@ class TripPlannerApp {
         }
     }
 
+    async calculateDriveTimes(itineraryId) {
+        const itinerary = this.itineraries.find(it => it.id === itineraryId);
+        if (!itinerary) return;
+
+        if (itinerary.locations.length < 2) {
+            Utils.showToast('Need at least 2 locations to calculate drive times', 'warning');
+            return;
+        }
+
+        // Check if locations have names
+        const emptyLocations = itinerary.locations.filter(loc => !loc.name || loc.name.trim() === '');
+        if (emptyLocations.length > 0) {
+            Utils.showToast('Please enter names for all locations first', 'warning');
+            return;
+        }
+
+        // Find button and prevent multiple simultaneous calculations
+        const button = document.querySelector(`[data-itinerary-id="${itineraryId}"] .calculate-drive-times-btn`);
+        if (!button) {
+            console.error('Calculate drive times button not found');
+            return;
+        }
+
+        // Check if already calculating
+        if (button.disabled) {
+            console.log('Calculation already in progress, ignoring duplicate request');
+            return;
+        }
+
+        // Show loading state
+        const originalText = button.textContent;
+        button.textContent = '🚗 Calculating...';
+        button.disabled = true;
+
+        try {
+            console.log('Starting drive time calculation for itinerary:', itineraryId);
+            await this.routingService.calculateItineraryDrivingTimes(itinerary);
+            console.log('Drive time calculation completed');
+            
+            this.saveItineraries();
+            this.updateItinerarySummary(itineraryId);
+            
+            // Update just the location inputs without full re-render
+            this.updateLocationInputs(itineraryId);
+            
+            Utils.showToast('Drive times calculated successfully!', 'success');
+
+        } catch (error) {
+            console.error('Failed to calculate drive times:', error);
+            
+            // Provide more helpful error messages
+            let errorMessage = `Failed to calculate drive times: ${error.message}`;
+            
+            if (error.message.includes('not found')) {
+                errorMessage += '\n\nTip: Try being more specific with location names (e.g., "Fleet, UK" instead of just "Fleet")';
+            }
+            
+            Utils.showToast(errorMessage, 'error');
+        } finally {
+            // Ensure button is always restored, even if DOM changed
+            setTimeout(() => {
+                const currentButton = document.querySelector(`[data-itinerary-id="${itineraryId}"] .calculate-drive-times-btn`);
+                if (currentButton) {
+                    currentButton.textContent = originalText;
+                    currentButton.disabled = false;
+                    console.log('Button state restored');
+                } else {
+                    console.warn('Could not find button to restore state');
+                }
+            }, 100);
+        }
+    }
+
+    updateLocationInputs(itineraryId) {
+        const itinerary = this.itineraries.find(it => it.id === itineraryId);
+        if (!itinerary) return;
+
+        const card = document.querySelector(`[data-itinerary-id="${itineraryId}"]`);
+        if (!card) return;
+
+        const locationItems = card.querySelectorAll('.location-item');
+        locationItems.forEach((item, index) => {
+            if (index < itinerary.locations.length) {
+                const location = itinerary.locations[index];
+                const driveTimeInput = item.querySelector('.location-drive-time input');
+                if (driveTimeInput) {
+                    driveTimeInput.value = location.drivingTime || 0;
+                }
+            }
+        });
+    }
+
     updateItineraryName(itineraryId, newName) {
         const itinerary = this.itineraries.find(it => it.id === itineraryId);
         if (itinerary) {
@@ -325,6 +424,7 @@ class TripPlannerApp {
                     ${itinerary.locations.map(location => this.createLocationHTML(itinerary.id, location)).join('')}
                 </div>
                 <button class="add-location-btn">+ Add Location</button>
+                <button class="calculate-drive-times-btn" title="Calculate driving times between locations">🚗 Calculate Drive Times</button>
                 <div class="itinerary-summary">
                     <div class="summary-stat">
                         <span class="label">Locations</span>
