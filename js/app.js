@@ -128,6 +128,14 @@ class TripPlannerApp {
                 this.calculateDriveTimes(itineraryId);
             } else if (e.target.classList.contains('edit-drive-time-btn')) {
                 this.toggleDriveTimeEdit(e.target);
+            } else if (e.target.closest('.itinerary-actions .btn-icon[title="Delete"]')) {
+                const card = e.target.closest('.itinerary-card');
+                const itineraryId = card.dataset.itineraryId;
+                this.deleteItinerary(itineraryId);
+            } else if (e.target.closest('.itinerary-actions .btn-icon[title="Duplicate"]')) {
+                const card = e.target.closest('.itinerary-card');
+                const itineraryId = card.dataset.itineraryId;
+                this.duplicateItinerary(itineraryId);
             }
         });
 
@@ -148,6 +156,86 @@ class TripPlannerApp {
             if (e.target.classList.contains('drive-time-input')) {
                 this.finishDriveTimeEdit(e.target);
             }
+        });
+
+        // Drag and drop event listeners for location reordering
+        this.setupDragAndDrop();
+    }
+
+    setupDragAndDrop() {
+        let draggedElement = null;
+        let draggedItineraryId = null;
+
+        document.addEventListener('dragstart', (e) => {
+            if (e.target.classList.contains('location-item')) {
+                draggedElement = e.target;
+                const card = e.target.closest('.itinerary-card');
+                draggedItineraryId = card.dataset.itineraryId;
+                
+                e.target.style.opacity = '0.5';
+                e.dataTransfer.effectAllowed = 'move';
+                e.dataTransfer.setData('text/html', e.target.outerHTML);
+            }
+        });
+
+        document.addEventListener('dragend', (e) => {
+            if (e.target.classList.contains('location-item')) {
+                e.target.style.opacity = '';
+                draggedElement = null;
+                draggedItineraryId = null;
+                
+                // Remove any drop zone indicators
+                document.querySelectorAll('.drop-zone').forEach(zone => {
+                    zone.classList.remove('drop-zone');
+                });
+            }
+        });
+
+        document.addEventListener('dragover', (e) => {
+            if (draggedElement) {
+                e.preventDefault();
+                e.dataTransfer.dropEffect = 'move';
+                
+                const targetLocationItem = e.target.closest('.location-item');
+                const targetCard = e.target.closest('.itinerary-card');
+                
+                // Only allow dropping within the same itinerary
+                if (targetCard && targetCard.dataset.itineraryId === draggedItineraryId) {
+                    if (targetLocationItem && targetLocationItem !== draggedElement) {
+                        // Remove existing drop zone indicators
+                        document.querySelectorAll('.drop-zone').forEach(zone => {
+                            zone.classList.remove('drop-zone');
+                        });
+                        
+                        // Add drop zone indicator
+                        targetLocationItem.classList.add('drop-zone');
+                    }
+                }
+            }
+        });
+
+        document.addEventListener('drop', (e) => {
+            e.preventDefault();
+            
+            if (!draggedElement) return;
+            
+            const targetLocationItem = e.target.closest('.location-item');
+            const targetCard = e.target.closest('.itinerary-card');
+            
+            // Only allow dropping within the same itinerary
+            if (targetCard && targetCard.dataset.itineraryId === draggedItineraryId && 
+                targetLocationItem && targetLocationItem !== draggedElement) {
+                
+                const draggedLocationId = draggedElement.dataset.locationId;
+                const targetLocationId = targetLocationItem.dataset.locationId;
+                
+                this.reorderLocation(draggedItineraryId, draggedLocationId, targetLocationId);
+            }
+            
+            // Clean up
+            document.querySelectorAll('.drop-zone').forEach(zone => {
+                zone.classList.remove('drop-zone');
+            });
         });
     }
 
@@ -171,6 +259,84 @@ class TripPlannerApp {
         setTimeout(() => {
             const nameInput = document.querySelector(`[data-itinerary-id="${newItinerary.id}"] .itinerary-name-input`);
             if (nameInput) nameInput.focus();
+        }, 100);
+    }
+
+    deleteItinerary(itineraryId) {
+        const itinerary = this.itineraries.find(it => it.id === itineraryId);
+        if (!itinerary) {
+            Utils.showToast('Itinerary not found', 'error');
+            return;
+        }
+
+        // Show confirmation dialog
+        const confirmed = confirm(`Are you sure you want to delete "${itinerary.name}"?\n\nThis action cannot be undone.`);
+        
+        if (!confirmed) {
+            return;
+        }
+
+        // Remove from itineraries array
+        this.itineraries = this.itineraries.filter(it => it.id !== itineraryId);
+        
+        // Remove from selected itineraries if it was selected
+        this.selectedItineraries.delete(itineraryId);
+        
+        // Save changes
+        this.saveItineraries();
+        
+        // Show success message
+        Utils.showToast(`"${itinerary.name}" deleted successfully`, 'success');
+        
+        // Re-render the view
+        this.render();
+        
+        // If we're in compare mode and no itineraries are selected, exit compare mode
+        if (this.isCompareMode && this.selectedItineraries.size === 0) {
+            this.toggleCompareMode();
+        }
+    }
+
+    duplicateItinerary(itineraryId) {
+        const originalItinerary = this.itineraries.find(it => it.id === itineraryId);
+        if (!originalItinerary) {
+            Utils.showToast('Itinerary not found', 'error');
+            return;
+        }
+
+        // Create a new itinerary with copied data
+        const duplicatedItinerary = new Itinerary();
+        duplicatedItinerary.name = `${originalItinerary.name} (Copy)`;
+        
+        // Copy all locations
+        originalItinerary.locations.forEach(location => {
+            duplicatedItinerary.addLocation({
+                name: location.name,
+                day: location.day,
+                nights: location.nights,
+                drivingTime: location.drivingTime
+            });
+        });
+
+        // Add to itineraries array
+        this.itineraries.push(duplicatedItinerary);
+        
+        // Save changes
+        this.saveItineraries();
+        
+        // Show success message
+        Utils.showToast(`"${originalItinerary.name}" duplicated successfully`, 'success');
+        
+        // Re-render the view
+        this.render();
+
+        // Focus on the new itinerary name input
+        setTimeout(() => {
+            const nameInput = document.querySelector(`[data-itinerary-id="${duplicatedItinerary.id}"] .itinerary-name-input`);
+            if (nameInput) {
+                nameInput.focus();
+                nameInput.select(); // Select all text for easy editing
+            }
         }, 100);
     }
 
@@ -218,6 +384,38 @@ class TripPlannerApp {
             this.saveItineraries();
             this.render();
         }
+    }
+
+    reorderLocation(itineraryId, draggedLocationId, targetLocationId) {
+        const itinerary = this.itineraries.find(it => it.id === itineraryId);
+        if (!itinerary) return;
+
+        // Don't reorder if dragging to same position
+        if (draggedLocationId === targetLocationId) return;
+
+        // Find the indices of the locations
+        const draggedIndex = itinerary.locations.findIndex(loc => loc.id === draggedLocationId);
+        const targetIndex = itinerary.locations.findIndex(loc => loc.id === targetLocationId);
+
+        if (draggedIndex === -1 || targetIndex === -1) return;
+
+        // Remove the dragged location from its current position
+        const [draggedLocation] = itinerary.locations.splice(draggedIndex, 1);
+
+        // Insert it at the target position
+        itinerary.locations.splice(targetIndex, 0, draggedLocation);
+
+        // Update day numbers based on new order
+        itinerary.locations.forEach((location, index) => {
+            location.day = index + 1;
+        });
+
+        // Update calculations and save
+        itinerary.updateCalculations();
+        this.saveItineraries();
+        this.render();
+
+        Utils.showToast('Location order updated', 'success');
     }
 
     updateLocationData(itineraryId, locationId, inputElement) {
@@ -525,7 +723,8 @@ class TripPlannerApp {
 
     createLocationHTML(itineraryId, location) {
         return `
-            <div class="location-item" data-location-id="${location.id}">
+            <div class="location-item" data-location-id="${location.id}" draggable="true">
+                <div class="drag-handle" title="Drag to reorder">⋮⋮</div>
                 <input type="text" class="location-name" value="${location.name}" 
                        placeholder="Enter location">
                 <div class="location-details">
