@@ -15,7 +15,7 @@ class Itinerary {
     addLocation(locationData = {}) {
         const location = {
             id: Utils.generateId(),
-            name: locationData.name || 'New Location',
+            name: locationData.name || '',
             day: locationData.day || this.locations.length + 1,
             nights: locationData.nights || 1,
             drivingTime: locationData.drivingTime || 0,
