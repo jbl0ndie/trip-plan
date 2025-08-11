@@ -728,7 +728,9 @@ class TripPlannerApp {
             </div>
             <div class="itinerary-body">
                 <div class="location-list">
-                    ${itinerary.locations.map(location => this.createLocationHTML(itinerary.id, location)).join('')}
+                    ${itinerary.locations.map((location, index, array) => 
+                        this.createLocationHTML(itinerary.id, location, index, array.length)
+                    ).join('')}
                 </div>
                 <button class="add-location-btn">+ Add Location</button>
                 <button class="calculate-drive-times-btn" title="Calculate driving times between locations">🚗 Calculate Drive Times</button>
@@ -758,17 +760,23 @@ class TripPlannerApp {
         return card;
     }
 
-    createLocationHTML(itineraryId, location) {
+    createLocationHTML(itineraryId, location, index, totalLocations) {
+        const isFirst = index === 0;
+        const isLast = index === totalLocations - 1;
+        const showNights = !isFirst && !isLast;
+        
         return `
             <div class="location-item" data-location-id="${location.id}">
                 <div class="drag-handle" draggable="true" data-location-id="${location.id}" title="Drag to reorder">⋮⋮</div>
                 <input type="text" class="location-name" value="${location.name}" 
                        placeholder="Enter location">
                 <div class="location-details">
+                    ${showNights ? `
                     <div class="location-nights">
                         <input type="number" value="${location.nights}" min="0" max="30">
                         <span>nights</span>
                     </div>
+                    ` : ''}
                     <div class="location-drive-time">
                         🚙 <span class="drive-time-display">${Utils.formatDriveTime(location.drivingTime)}</span>
                         <input type="number" class="drive-time-input" value="${location.drivingTime}" min="0" max="1440" style="display: none;">

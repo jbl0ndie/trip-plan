@@ -68,9 +68,16 @@ class Itinerary {
     }
 
     updateCalculations() {
-        // Calculate total nights
-        this.totalNights = this.locations.reduce((total, location) => {
-            return total + (location.nights || 0);
+        // Calculate total nights (excluding first and last locations)
+        this.totalNights = this.locations.reduce((total, location, index) => {
+            const isFirst = index === 0;
+            const isLast = index === this.locations.length - 1;
+            
+            // Only count nights for middle locations (not first or last)
+            if (!isFirst && !isLast) {
+                return total + (location.nights || 0);
+            }
+            return total;
         }, 0);
 
         // Calculate total driving time
