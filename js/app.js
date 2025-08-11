@@ -448,13 +448,7 @@ class TripPlannerApp {
         
         // Update the location data based on the input type
         if (inputElement.classList.contains('location-name')) {
-            const oldName = location.name;
             location.name = inputElement.value;
-            
-            // Refresh map if location name changed
-            if (oldName !== location.name) {
-                setTimeout(() => this.refreshItineraryMap(itineraryId), 100);
-            }
         } else if (inputElement.type === 'number') {
             if (inputElement.closest('.location-nights')) {
                 location.nights = parseInt(inputElement.value) || 0;
@@ -814,10 +808,17 @@ class TripPlannerApp {
             return;
         }
 
+        // Properly destroy existing Leaflet map instance if it exists
+        if (window.leafletMaps && window.leafletMaps[mapId]) {
+            console.log(`Destroying existing map instance for ${mapId}`);
+            window.leafletMaps[mapId].remove();
+            delete window.leafletMaps[mapId];
+        }
+
         // Reset the initialized flag to allow re-initialization
         mapElement.dataset.initialized = 'false';
         
-        // Clear the existing map
+        // Clear the existing map HTML
         mapElement.innerHTML = '';
         
         // Find the itinerary
@@ -834,7 +835,7 @@ class TripPlannerApp {
 
     async initializeLeafletMap(mapId, itinerary) {
         const mapElement = document.getElementById(mapId);
-        if (!mapElement || mapElement.dataset.initialized) return;
+        if (!mapElement || mapElement.dataset.initialized === 'true') return;
 
         mapElement.dataset.initialized = 'true';
         
@@ -864,6 +865,10 @@ class TripPlannerApp {
                 doubleClickZoom: false,
                 dragging: true
             }).setView([54.0, -2.0], 6);
+
+            // Store map instance for cleanup
+            if (!window.leafletMaps) window.leafletMaps = {};
+            window.leafletMaps[mapId] = map;
 
             // Add tiles
             L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
