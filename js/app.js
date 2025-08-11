@@ -9,8 +9,6 @@ class TripPlannerApp {
         this.routingService = new RoutingService();
         
         this.initializeApp();
-        this.bindEvents();
-        this.render();
     }
 
     initializeApp() {
