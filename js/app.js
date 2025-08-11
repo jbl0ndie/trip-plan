@@ -750,7 +750,7 @@ class TripPlannerApp {
                         <span>nights</span>
                     </div>
                     <div class="location-drive-time">
-                        🚗 <span class="drive-time-display">${Utils.formatDriveTime(location.drivingTime)}</span>
+                        🚙 <span class="drive-time-display">${Utils.formatDriveTime(location.drivingTime)}</span>
                         <input type="number" class="drive-time-input" value="${location.drivingTime}" min="0" max="1440" style="display: none;">
                         <button class="edit-drive-time-btn" title="Edit drive time">✏️</button>
                     </div>
