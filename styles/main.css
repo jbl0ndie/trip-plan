@@ -965,6 +965,25 @@ input:focus {
         justify-content: center;
     }
 
+    /* Fix main content for mobile - remove constraints */
+    #main-content {
+        position: static;
+        overflow: visible;
+        flex: 1;
+    }
+
+    .main-container {
+        padding: 0.5rem;
+    }
+
+    .screen {
+        position: static;
+        transform: none;
+        opacity: 1;
+        padding-bottom: 1rem;
+        overflow-y: visible;
+    }
+
     .itineraries-grid {
         flex-direction: column;
     }
@@ -973,8 +992,9 @@ input:focus {
         min-width: 100%;
     }
 
-    #main-content {
-        padding: 1rem;
+    .itinerary-card {
+        margin-bottom: 1rem;
+        overflow: visible;
     }
 
     /* Make trip dates stack vertically on narrow screens */
@@ -1001,7 +1021,7 @@ input:focus {
 /* Extra small screens (phones) */
 @media (max-width: 480px) {
     .main-container {
-        padding: 0.5rem;
+        padding: 0.25rem;
     }
 
     .trip-dates input {
@@ -1010,7 +1030,32 @@ input:focus {
     }
 
     .itinerary-card {
-        padding: 1rem;
         margin-bottom: 1rem;
+        border-radius: 0.5rem;
+    }
+
+    .itinerary-header {
+        padding: 0.75rem 1rem;
+    }
+
+    .itinerary-content {
+        padding: 1rem;
+    }
+
+    /* Ensure buttons are visible and accessible */
+    .card-actions {
+        gap: 0.5rem;
+        flex-wrap: wrap;
+    }
+
+    .btn {
+        font-size: 0.875rem;
+        padding: 0.625rem 0.875rem;
+        min-height: 44px; /* Touch target size */
+    }
+
+    /* Ensure location inputs are usable */
+    .location-input {
+        font-size: 16px; /* Prevent zoom on iOS */
     }
 }
