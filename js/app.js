@@ -407,8 +407,20 @@ class TripPlannerApp {
         // Remove the dragged location from its current position
         const [draggedLocation] = itinerary.locations.splice(draggedIndex, 1);
 
-        // Insert it at the target position
-        itinerary.locations.splice(targetIndex, 0, draggedLocation);
+        // Calculate the correct insertion index
+        // When dragging down (to a higher index), the target index needs to be adjusted
+        // because we just removed an element from before it
+        let insertIndex;
+        if (draggedIndex < targetIndex) {
+            // Dragging down: insert at targetIndex - 1 (because we removed from before)
+            insertIndex = targetIndex - 1;
+        } else {
+            // Dragging up: insert at targetIndex (no adjustment needed)
+            insertIndex = targetIndex;
+        }
+
+        // Insert the dragged location at the calculated position
+        itinerary.locations.splice(insertIndex, 0, draggedLocation);
 
         // Update day numbers based on new order
         itinerary.locations.forEach((location, index) => {
