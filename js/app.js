@@ -450,7 +450,13 @@ class TripPlannerApp {
         
         // Update the location data based on the input type
         if (inputElement.classList.contains('location-name')) {
+            const oldName = location.name;
             location.name = inputElement.value;
+            
+            // Refresh map if location name changed
+            if (oldName !== location.name) {
+                setTimeout(() => this.refreshItineraryMap(itineraryId), 100);
+            }
         } else if (inputElement.type === 'number') {
             if (inputElement.closest('.location-nights')) {
                 location.nights = parseInt(inputElement.value) || 0;
@@ -553,6 +559,9 @@ class TripPlannerApp {
             
             // Update just the location inputs without full re-render
             this.updateLocationInputs(itineraryId);
+            
+            // Refresh the map to show updated route
+            this.refreshItineraryMap(itineraryId);
             
             // Show detailed success message with route information
             const routeInfo = this.getRouteInfoSummary(result);
@@ -788,6 +797,33 @@ class TripPlannerApp {
                 this.initializeLeafletMap(mapId, itinerary);
             });
         }, 500);
+    }
+
+    refreshItineraryMap(itineraryId) {
+        const mapId = `map-${itineraryId}`;
+        const mapElement = document.getElementById(mapId);
+        
+        if (!mapElement) {
+            console.warn(`Map element not found for itinerary ${itineraryId}`);
+            return;
+        }
+
+        // Reset the initialized flag to allow re-initialization
+        mapElement.dataset.initialized = 'false';
+        
+        // Clear the existing map
+        mapElement.innerHTML = '';
+        
+        // Find the itinerary
+        const itinerary = this.itineraries.find(it => it.id === itineraryId);
+        if (!itinerary) {
+            console.warn(`Itinerary not found: ${itineraryId}`);
+            return;
+        }
+
+        // Re-initialize the map
+        console.log(`Refreshing map for itinerary: ${itinerary.name}`);
+        this.initializeLeafletMap(mapId, itinerary);
     }
 
     async initializeLeafletMap(mapId, itinerary) {
