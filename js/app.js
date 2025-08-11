@@ -679,6 +679,7 @@ class TripPlannerApp {
 
     render() {
         this.renderItineraries();
+        this.initializeMaps();
     }
 
     renderItineraries() {
@@ -732,6 +733,12 @@ class TripPlannerApp {
                         <span class="value">${Utils.formatDriveTime(itinerary.getTotalDriveTime())}</span>
                     </div>
                 </div>
+                <div class="itinerary-map">
+                    <div class="leaflet-map-container">
+                        <div id="map-${itinerary.id}" class="leaflet-map"></div>
+                        <div class="map-loading">Loading map...</div>
+                    </div>
+                </div>
             </div>
         `;
 
@@ -765,6 +772,110 @@ class TripPlannerApp {
             startDate: this.tripStartDate,
             endDate: this.tripEndDate
         });
+    }
+
+    initializeMaps() {
+        // Initialize all maps after a short delay to ensure DOM is ready
+        setTimeout(() => {
+            this.itineraries.forEach(itinerary => {
+                const mapId = `map-${itinerary.id}`;
+                this.initializeLeafletMap(mapId, itinerary);
+            });
+        }, 500);
+    }
+
+    async initializeLeafletMap(mapId, itinerary) {
+        const mapElement = document.getElementById(mapId);
+        if (!mapElement || mapElement.dataset.initialized) return;
+
+        mapElement.dataset.initialized = 'true';
+        
+        // Check if Leaflet is loaded
+        if (typeof L === 'undefined') {
+            console.error('Leaflet library not loaded');
+            const loadingEl = mapElement.parentElement.querySelector('.map-loading');
+            if (loadingEl) loadingEl.textContent = 'Map library not loaded';
+            return;
+        }
+
+        const locations = itinerary.locations.filter(loc => loc.name.trim() !== '');
+        const loadingEl = mapElement.parentElement.querySelector('.map-loading');
+        
+        try {
+            // Initialize map with default view (UK)
+            const map = L.map(mapId, {
+                zoomControl: true,
+                scrollWheelZoom: false,
+                doubleClickZoom: false,
+                dragging: true
+            }).setView([54.0, -2.0], 6);
+
+            // Add tiles
+            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                attribution: '© OpenStreetMap contributors',
+                maxZoom: 18
+            }).addTo(map);
+
+            if (loadingEl) loadingEl.style.display = 'none';
+
+            if (locations.length === 0) {
+                return;
+            }
+
+            const markers = [];
+            const coordinates = [];
+
+            // Add markers for each location
+            for (let i = 0; i < locations.length; i++) {
+                const location = locations[i];
+                try {
+                    const results = await this.routingService.geocodeLocation(location.name);
+                    if (results && results.length > 0) {
+                        const result = results[0];
+                        const lat = parseFloat(result.lat);
+                        const lng = parseFloat(result.lon);
+                        
+                        coordinates.push([lat, lng]);
+
+                        const isFirst = i === 0;
+                        const isLast = i === locations.length - 1;
+                        const iconHtml = isFirst ? '🚩' : isLast ? '🏁' : '📍';
+
+                        const marker = L.marker([lat, lng]).addTo(map);
+                        marker.bindPopup(`<strong>${location.name}</strong>`);
+                        markers.push(marker);
+                    }
+                } catch (error) {
+                    console.warn(`Could not geocode: ${location.name}`, error);
+                }
+            }
+
+            // Add route line
+            if (coordinates.length > 1) {
+                L.polyline(coordinates, {
+                    color: '#3b82f6',
+                    weight: 3,
+                    opacity: 0.7
+                }).addTo(map);
+            }
+
+            // Fit bounds
+            if (coordinates.length > 0) {
+                if (coordinates.length === 1) {
+                    map.setView(coordinates[0], 10);
+                } else {
+                    const group = new L.featureGroup(markers);
+                    map.fitBounds(group.getBounds().pad(0.1));
+                }
+            }
+
+        } catch (error) {
+            console.error('Error initializing map:', error);
+            if (loadingEl) {
+                loadingEl.textContent = 'Unable to load map';
+                loadingEl.style.color = '#ef4444';
+            }
+        }
     }
 
     updateTripDuration() {
