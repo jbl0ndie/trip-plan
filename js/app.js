@@ -28,16 +28,22 @@ class TripPlannerApp {
             const sampleItinerary = new Itinerary();
             sampleItinerary.name = 'Sample Itinerary';
             sampleItinerary.addLocation({
-                name: 'Sydney',
+                name: 'London',
                 day: 1,
                 nights: 2,
                 drivingTime: 0
             });
             sampleItinerary.addLocation({
-                name: 'Melbourne', 
+                name: 'Bath', 
                 day: 2,
-                nights: 3,
-                drivingTime: 540
+                nights: 1,
+                drivingTime: 120
+            });
+            sampleItinerary.addLocation({
+                name: 'Edinburgh', 
+                day: 3,
+                nights: 2,
+                drivingTime: 300
             });
             this.itineraries.push(sampleItinerary);
         }
@@ -828,45 +834,75 @@ class TripPlannerApp {
             // Add markers for each location
             for (let i = 0; i < locations.length; i++) {
                 const location = locations[i];
+                console.log(`Geocoding location ${i + 1}/${locations.length}: ${location.name}`);
                 try {
-                    const results = await this.routingService.geocodeLocation(location.name);
-                    if (results && results.length > 0) {
-                        const result = results[0];
+                    const result = await this.routingService.geocodeLocation(location.name);
+                    console.log(`Geocode results for "${location.name}":`, result);
+                    
+                    if (result && result.lat && result.lng) {
                         const lat = parseFloat(result.lat);
-                        const lng = parseFloat(result.lon);
+                        const lng = parseFloat(result.lng);
                         
+                        if (isNaN(lat) || isNaN(lng)) {
+                            console.error(`Invalid coordinates for ${location.name}:`, lat, lng);
+                            continue;
+                        }
+                        
+                        console.log(`Adding marker for ${location.name} at [${lat}, ${lng}]`);
                         coordinates.push([lat, lng]);
 
                         const isFirst = i === 0;
                         const isLast = i === locations.length - 1;
                         const iconHtml = isFirst ? '🚩' : isLast ? '🏁' : '📍';
 
-                        const marker = L.marker([lat, lng]).addTo(map);
-                        marker.bindPopup(`<strong>${location.name}</strong>`);
+                        // Create custom marker icon
+                        const customIcon = L.divIcon({
+                            className: 'custom-marker',
+                            html: `<div class="marker-icon">${iconHtml}</div>`,
+                            iconSize: [30, 30],
+                            iconAnchor: [15, 30]
+                        });
+
+                        const marker = L.marker([lat, lng], { icon: customIcon }).addTo(map);
+                        marker.bindPopup(`<strong>${location.name}</strong><br>
+                            ${location.nights > 0 ? `${location.nights} night${location.nights !== 1 ? 's' : ''}<br>` : ''}
+                            Day ${location.day || i + 1}`);
                         markers.push(marker);
+                    } else {
+                        console.warn(`No results found for: ${location.name}`);
                     }
                 } catch (error) {
-                    console.warn(`Could not geocode: ${location.name}`, error);
+                    console.error(`Geocoding failed for ${location.name}:`, error);
                 }
             }
 
+            console.log(`Total coordinates found: ${coordinates.length}`);
+            console.log('Coordinates:', coordinates);
+
             // Add route line
             if (coordinates.length > 1) {
-                L.polyline(coordinates, {
+                console.log('Adding route line between', coordinates.length, 'points');
+                const polyline = L.polyline(coordinates, {
                     color: '#3b82f6',
                     weight: 3,
                     opacity: 0.7
                 }).addTo(map);
+                console.log('Route line added');
             }
 
             // Fit bounds
             if (coordinates.length > 0) {
+                console.log('Fitting map bounds to coordinates');
                 if (coordinates.length === 1) {
+                    console.log('Single location, setting view to:', coordinates[0]);
                     map.setView(coordinates[0], 10);
                 } else {
+                    console.log('Multiple locations, fitting bounds');
                     const group = new L.featureGroup(markers);
                     map.fitBounds(group.getBounds().pad(0.1));
                 }
+            } else {
+                console.log('No coordinates found, keeping default view');
             }
 
         } catch (error) {
