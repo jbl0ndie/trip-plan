@@ -167,20 +167,21 @@ class TripPlannerApp {
         let draggedItineraryId = null;
 
         document.addEventListener('dragstart', (e) => {
-            if (e.target.classList.contains('location-item')) {
-                draggedElement = e.target;
-                const card = e.target.closest('.itinerary-card');
+            if (e.target.classList.contains('drag-handle')) {
+                // Get the parent location item
+                draggedElement = e.target.closest('.location-item');
+                const card = draggedElement.closest('.itinerary-card');
                 draggedItineraryId = card.dataset.itineraryId;
                 
-                e.target.style.opacity = '0.5';
+                draggedElement.style.opacity = '0.5';
                 e.dataTransfer.effectAllowed = 'move';
-                e.dataTransfer.setData('text/html', e.target.outerHTML);
+                e.dataTransfer.setData('text/html', draggedElement.outerHTML);
             }
         });
 
         document.addEventListener('dragend', (e) => {
-            if (e.target.classList.contains('location-item')) {
-                e.target.style.opacity = '';
+            if (e.target.classList.contains('drag-handle') && draggedElement) {
+                draggedElement.style.opacity = '';
                 draggedElement = null;
                 draggedItineraryId = null;
                 
@@ -723,8 +724,8 @@ class TripPlannerApp {
 
     createLocationHTML(itineraryId, location) {
         return `
-            <div class="location-item" data-location-id="${location.id}" draggable="true">
-                <div class="drag-handle" title="Drag to reorder">⋮⋮</div>
+            <div class="location-item" data-location-id="${location.id}">
+                <div class="drag-handle" draggable="true" data-location-id="${location.id}" title="Drag to reorder">⋮⋮</div>
                 <input type="text" class="location-name" value="${location.name}" 
                        placeholder="Enter location">
                 <div class="location-details">
