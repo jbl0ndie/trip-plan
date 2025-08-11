@@ -151,6 +151,28 @@ class RoutingService {
                     }
                 }
                 
+                // Specific geographic preferences for common ambiguous UK places
+                if (locationName.toLowerCase() === 'fleet') {
+                    // Fleet, Hampshire (the main town) is around 51.29, -0.83 (M3 corridor, Surrey/Hampshire border)
+                    const fleetHampshireLat = 51.29;
+                    const fleetHampshireLng = -0.83;
+                    const distance = Math.sqrt(Math.pow(lat - fleetHampshireLat, 2) + Math.pow(lng - fleetHampshireLng, 2));
+                    
+                    if (distance < 0.1) { // Within ~11km of Fleet, Hampshire
+                        score += 20;
+                        reasons.push('near Fleet, Hampshire location');
+                    } else if (distance < 0.2) { // Within ~22km
+                        score += 10;
+                        reasons.push('reasonably close to Fleet, Hampshire');
+                    }
+                    
+                    // Also prefer places that are in Hampshire/Surrey area (southern England, west of London)
+                    if (lat >= 51.0 && lat <= 51.5 && lng >= -1.0 && lng <= -0.5) {
+                        score += 15;
+                        reasons.push('in Hampshire/Surrey region');
+                    }
+                }
+                
                 // Boost if name matches closely
                 const name = props.name || '';
                 if (name.toLowerCase().includes(locationName.toLowerCase())) {
