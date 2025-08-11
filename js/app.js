@@ -126,6 +126,8 @@ class TripPlannerApp {
                 const card = e.target.closest('.itinerary-card');
                 const itineraryId = card.dataset.itineraryId;
                 this.calculateDriveTimes(itineraryId);
+            } else if (e.target.classList.contains('edit-drive-time-btn')) {
+                this.toggleDriveTimeEdit(e.target);
             }
         });
 
@@ -139,6 +141,12 @@ class TripPlannerApp {
                 const locationId = locationItem.dataset.locationId;
                 
                 self.updateLocationData(itineraryId, locationId, e.target);
+            }
+        });
+
+        document.addEventListener('blur', (e) => {
+            if (e.target.classList.contains('drive-time-input')) {
+                this.finishDriveTimeEdit(e.target);
             }
         });
     }
@@ -225,8 +233,9 @@ class TripPlannerApp {
         } else if (inputElement.type === 'number') {
             if (inputElement.closest('.location-nights')) {
                 location.nights = parseInt(inputElement.value) || 0;
-            } else if (inputElement.closest('.location-drive-time')) {
-                location.drivingTime = parseInt(inputElement.value) || 0;
+            } else if (inputElement.classList.contains('drive-time-input')) {
+                const rawMinutes = parseInt(inputElement.value) || 0;
+                location.drivingTime = Utils.roundToNearestQuarterHour(rawMinutes);
             }
         }
         
@@ -363,12 +372,56 @@ class TripPlannerApp {
         locationItems.forEach((item, index) => {
             if (index < itinerary.locations.length) {
                 const location = itinerary.locations[index];
-                const driveTimeInput = item.querySelector('.location-drive-time input');
+                const driveTimeDisplay = item.querySelector('.drive-time-display');
+                const driveTimeInput = item.querySelector('.drive-time-input');
+                
+                if (driveTimeDisplay) {
+                    driveTimeDisplay.textContent = Utils.formatDriveTime(location.drivingTime);
+                }
                 if (driveTimeInput) {
                     driveTimeInput.value = location.drivingTime || 0;
                 }
             }
         });
+    }
+
+    toggleDriveTimeEdit(editButton) {
+        const driveTimeContainer = editButton.closest('.location-drive-time');
+        const display = driveTimeContainer.querySelector('.drive-time-display');
+        const input = driveTimeContainer.querySelector('.drive-time-input');
+        
+        // Switch to edit mode
+        display.style.display = 'none';
+        input.style.display = 'inline';
+        editButton.style.display = 'none';
+        input.focus();
+    }
+
+    finishDriveTimeEdit(input) {
+        const driveTimeContainer = input.closest('.location-drive-time');
+        const display = driveTimeContainer.querySelector('.drive-time-display');
+        const editButton = driveTimeContainer.querySelector('.edit-drive-time-btn');
+        const locationItem = input.closest('.location-item');
+        
+        // Update the data
+        const card = locationItem.closest('.itinerary-card');
+        const itineraryId = card.dataset.itineraryId;
+        const locationId = locationItem.dataset.locationId;
+        
+        // Update the location with rounded value
+        const rawMinutes = parseInt(input.value) || 0;
+        const roundedMinutes = Utils.roundToNearestQuarterHour(rawMinutes);
+        input.value = roundedMinutes;
+        
+        this.updateLocationData(itineraryId, locationId, input);
+        
+        // Update display with formatted time
+        display.textContent = Utils.formatDriveTime(roundedMinutes);
+        
+        // Switch back to display mode
+        display.style.display = 'inline';
+        input.style.display = 'none';
+        editButton.style.display = 'inline';
     }
 
     updateItineraryName(itineraryId, newName) {
@@ -456,8 +509,9 @@ class TripPlannerApp {
                         <span>nights</span>
                     </div>
                     <div class="location-drive-time">
-                        🚗 <input type="number" value="${location.drivingTime}" min="0" max="1440">
-                        <span>min</span>
+                        🚗 <span class="drive-time-display">${Utils.formatDriveTime(location.drivingTime)}</span>
+                        <input type="number" class="drive-time-input" value="${location.drivingTime}" min="0" max="1440" style="display: none;">
+                        <button class="edit-drive-time-btn" title="Edit drive time">✏️</button>
                     </div>
                     <button class="location-remove" title="Remove location">×</button>
                 </div>

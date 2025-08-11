@@ -267,7 +267,8 @@ class RoutingService {
                 throw new Error('No routes found');
             }
 
-            return Math.round(data.routes[0].duration / 60);
+            const minutes = Math.round(data.routes[0].duration / 60);
+            return Utils.roundToNearestQuarterHour(minutes);
         } catch (error) {
             clearTimeout(timeoutId);
             if (error.name === 'AbortError') {
@@ -292,7 +293,8 @@ class RoutingService {
         }
 
         const data = await response.json();
-        return Math.round(data.features[0].properties.summary.duration / 60);
+        const minutes = Math.round(data.features[0].properties.summary.duration / 60);
+        return Utils.roundToNearestQuarterHour(minutes);
     }
 
     // Fallback: estimate driving time based on straight-line distance
@@ -312,9 +314,10 @@ class RoutingService {
 
         // Estimate driving time: assume 60km/h average speed, add 20% for roads not being straight
         const estimatedMinutes = Math.round((distance / 60) * 60 * 1.2);
+        const roundedMinutes = Utils.roundToNearestQuarterHour(estimatedMinutes);
         
-        console.warn(`Using estimated driving time: ${estimatedMinutes} minutes for ${distance.toFixed(1)}km`);
-        return estimatedMinutes;
+        console.warn(`Using estimated driving time: ${roundedMinutes} minutes for ${distance.toFixed(1)}km`);
+        return roundedMinutes;
     }
 
     toRad(deg) {

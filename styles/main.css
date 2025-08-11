@@ -349,6 +349,30 @@ body {
     border-radius: 0.25rem;
 }
 
+.drive-time-display {
+    font-size: 0.875rem;
+    color: #4a5568;
+    font-weight: 500;
+    min-width: 50px;
+    text-align: center;
+}
+
+.edit-drive-time-btn {
+    background: none;
+    border: none;
+    cursor: pointer;
+    padding: 0.125rem 0.25rem;
+    border-radius: 0.25rem;
+    opacity: 0.6;
+    font-size: 0.75rem;
+    transition: opacity 0.15s ease;
+}
+
+.edit-drive-time-btn:hover {
+    opacity: 1;
+    background: #f7fafc;
+}
+
 .location-remove {
     color: #e53e3e;
     background: none;

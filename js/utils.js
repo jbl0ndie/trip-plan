@@ -6,15 +6,41 @@ class Utils {
         return Date.now().toString(36) + Math.random().toString(36).substr(2);
     }
 
-    // Format minutes into hours and minutes display
+    // Round up minutes to the nearest quarter hour
+    static roundToNearestQuarterHour(minutes) {
+        if (minutes === 0) return 0;
+        
+        // Convert to quarter hours (15-minute intervals)
+        const quarterHours = Math.ceil(minutes / 15);
+        return quarterHours * 15;
+    }
+
+    // Format minutes into hours, rounding up to nearest quarter hour
     static formatDriveTime(minutes) {
-        if (minutes === 0) return '0m';
-        if (minutes < 60) return `${minutes}m`;
+        const roundedMinutes = this.roundToNearestQuarterHour(minutes);
         
-        const hours = Math.floor(minutes / 60);
-        const remainingMinutes = minutes % 60;
+        if (roundedMinutes === 0) return '0h';
+        if (roundedMinutes < 60) {
+            // Less than 1 hour - show as fraction of hour
+            if (roundedMinutes === 15) return '0.25h';
+            if (roundedMinutes === 30) return '0.5h';
+            if (roundedMinutes === 45) return '0.75h';
+        }
         
-        if (remainingMinutes === 0) return `${hours}h`;
+        const hours = Math.floor(roundedMinutes / 60);
+        const remainingMinutes = roundedMinutes % 60;
+        
+        if (remainingMinutes === 0) {
+            return `${hours}h`;
+        } else if (remainingMinutes === 15) {
+            return `${hours}.25h`;
+        } else if (remainingMinutes === 30) {
+            return `${hours}.5h`;
+        } else if (remainingMinutes === 45) {
+            return `${hours}.75h`;
+        }
+        
+        // Fallback (shouldn't happen with quarter-hour rounding)
         return `${hours}h ${remainingMinutes}m`;
     }
 
