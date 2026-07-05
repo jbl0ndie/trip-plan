@@ -6,6 +6,7 @@ class Itinerary {
         this.name = name;
         this.locations = [];
         this.totalDrivingTime = 0;
+        this.totalDrivingDistance = 0;
         this.totalNights = 0;
         this.isSelected = false;
         this.createdAt = new Date().toISOString();
@@ -19,6 +20,7 @@ class Itinerary {
             day: locationData.day || this.locations.length + 1,
             nights: locationData.nights || 1,
             drivingTime: locationData.drivingTime || 0,
+            drivingDistance: locationData.drivingDistance || 0,
             notes: locationData.notes || ''
         };
         
@@ -84,6 +86,11 @@ class Itinerary {
         this.totalDrivingTime = this.locations.reduce((total, location) => {
             return total + (location.drivingTime || 0);
         }, 0);
+
+        // Calculate total driving distance
+        this.totalDrivingDistance = this.locations.reduce((total, location) => {
+            return total + (location.drivingDistance || 0);
+        }, 0);
     }
 
     getTotalNights() {
@@ -92,6 +99,10 @@ class Itinerary {
 
     getTotalDriveTime() {
         return this.totalDrivingTime;
+    }
+
+    getTotalDriveDistance() {
+        return this.totalDrivingDistance;
     }
 
     getTotalDays() {
@@ -131,6 +142,7 @@ class Itinerary {
             day: location.day,
             nights: location.nights,
             drivingTime: location.drivingTime,
+            drivingDistance: location.drivingDistance,
             notes: location.notes
         }));
         cloned.updateCalculations();
@@ -147,6 +159,7 @@ class Itinerary {
             name: this.name,
             locations: this.locations,
             totalDrivingTime: this.totalDrivingTime,
+            totalDrivingDistance: this.totalDrivingDistance,
             totalNights: this.totalNights,
             isSelected: this.isSelected,
             createdAt: this.createdAt,
@@ -159,6 +172,7 @@ class Itinerary {
         itinerary.id = data.id;
         itinerary.locations = data.locations || [];
         itinerary.totalDrivingTime = data.totalDrivingTime || 0;
+        itinerary.totalDrivingDistance = data.totalDrivingDistance || 0;
         itinerary.totalNights = data.totalNights || 0;
         itinerary.isSelected = data.isSelected || false;
         itinerary.createdAt = data.createdAt || new Date().toISOString();
@@ -185,6 +199,7 @@ class LocationHelper {
             day: day,
             nights: 1,
             drivingTime: 0,
+            drivingDistance: 0,
             notes: ''
         };
     }

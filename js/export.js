@@ -48,6 +48,9 @@ class ExportManager {
                 let description = `${itinerary.name} - Day ${location.day}`;
                 if (night === 0 && location.drivingTime > 0) {
                     description += `\\nDriving time: ${Utils.formatDriveTime(location.drivingTime)}`;
+                    if (location.drivingDistance) {
+                        description += ` (${Utils.formatMiles(location.drivingDistance)})`;
+                    }
                 }
                 if (location.notes) {
                     description += `\\nNotes: ${location.notes}`;
@@ -83,7 +86,7 @@ class ExportManager {
                     `DTSTART:${this.formatICSDateTime(driveDate)}`,
                     `DTEND:${this.formatICSDateTime(driveEndDate)}`,
                     `SUMMARY:Drive to ${itinerary.locations[index + 1]?.name || 'Next Location'}`,
-                    `DESCRIPTION:${itinerary.name} - Travel time: ${Utils.formatDriveTime(location.drivingTime)}`,
+                    `DESCRIPTION:${itinerary.name} - Travel time: ${Utils.formatDriveTime(location.drivingTime)}${location.drivingDistance ? ' (' + Utils.formatMiles(location.drivingDistance) + ')' : ''}`,
                     `LOCATION:${location.name} to ${itinerary.locations[index + 1]?.name || 'Next Location'}`,
                     `DTSTAMP:${this.formatICSDateTime(new Date())}`,
                     'TRANSP:OPAQUE',
@@ -171,6 +174,9 @@ class ExportManager {
         summary.push(`Total Locations: ${itinerary.locations.length}`);
         summary.push(`Total Nights: ${itinerary.getTotalNights()}`);
         summary.push(`Total Drive Time: ${Utils.formatDriveTime(itinerary.getTotalDriveTime())}`);
+        if (itinerary.getTotalDriveDistance()) {
+            summary.push(`Total Distance: ${Utils.formatMiles(itinerary.getTotalDriveDistance())}`);
+        }
         summary.push('');
 
         summary.push('ITINERARY:');
@@ -180,7 +186,8 @@ class ExportManager {
             summary.push(`${index + 1}. ${location.name} (${location.nights} night${location.nights !== 1 ? 's' : ''})`);
             
             if (location.drivingTime > 0 && index < itinerary.locations.length - 1) {
-                summary.push(`   → Drive to next: ${Utils.formatDriveTime(location.drivingTime)}`);
+                const dist = location.drivingDistance ? ` (${Utils.formatMiles(location.drivingDistance)})` : '';
+                summary.push(`   → Drive to next: ${Utils.formatDriveTime(location.drivingTime)}${dist}`);
             }
             
             if (location.notes) {

@@ -356,9 +356,9 @@ class RoutingService {
 
         for (const service of routingServices) {
             try {
-                const durationMinutes = await service(fromCoords, toCoords);
-                this.routeCache.set(cacheKey, durationMinutes);
-                return durationMinutes;
+                const result = await service(fromCoords, toCoords);
+                this.routeCache.set(cacheKey, result);
+                return result;
             } catch (error) {
                 console.warn(`Routing service failed: ${error.message}`);
                 continue;
@@ -366,7 +366,9 @@ class RoutingService {
         }
 
         // Fallback: estimate based on straight-line distance
-        return this.estimateDrivingTime(fromCoords, toCoords);
+        const fallback = this.estimateDrivingTime(fromCoords, toCoords);
+        this.routeCache.set(cacheKey, fallback);
+        return fallback;
     }
 
     // Primary routing service - OSRM
@@ -402,11 +404,12 @@ class RoutingService {
             const route = data.routes[0];
             const rawMinutes = Math.round(route.duration / 60);
             const roundedMinutes = Utils.roundToNearestQuarterHour(rawMinutes);
-            const distance = route.distance ? Math.round(route.distance / 1000) : 'unknown';
+            const distanceKm = route.distance ? Math.round(route.distance / 1000) : 0;
+            const distanceMiles = Utils.metersToMiles(route.distance || 0);
             
-            console.log(`✅ OSRM route found: ${distance}km, ${rawMinutes}min raw → ${roundedMinutes}min rounded`);
+            console.log(`✅ OSRM route found: ${distanceKm}km (${distanceMiles}mi), ${rawMinutes}min raw → ${roundedMinutes}min rounded`);
             
-            return roundedMinutes;
+            return { duration: roundedMinutes, distanceMiles };
         } catch (error) {
             clearTimeout(timeoutId);
             if (error.name === 'AbortError') {
@@ -433,7 +436,10 @@ class RoutingService {
 
         const data = await response.json();
         const minutes = Math.round(data.features[0].properties.summary.duration / 60);
-        return Utils.roundToNearestQuarterHour(minutes);
+        const roundedMinutes = Utils.roundToNearestQuarterHour(minutes);
+        const distanceMeters = data.features[0].properties.summary.distance || 0;
+        const distanceMiles = Utils.metersToMiles(distanceMeters);
+        return { duration: roundedMinutes, distanceMiles };
     }
 
     // Fallback: estimate driving time based on straight-line distance
@@ -454,9 +460,10 @@ class RoutingService {
         // Estimate driving time: assume 60km/h average speed, add 20% for roads not being straight
         const estimatedMinutes = Math.round((distance / 60) * 60 * 1.2);
         const roundedMinutes = Utils.roundToNearestQuarterHour(estimatedMinutes);
+        const distanceMiles = Utils.metersToMiles(distance * 1000);
         
-        console.warn(`Using estimated driving time: ${roundedMinutes} minutes for ${distance.toFixed(1)}km`);
-        return roundedMinutes;
+        console.warn(`Using estimated driving time: ${roundedMinutes} minutes for ${distance.toFixed(1)}km (${distanceMiles}mi)`);
+        return { duration: roundedMinutes, distanceMiles };
     }
 
     toRad(deg) {
@@ -484,13 +491,19 @@ class RoutingService {
             await new Promise(resolve => setTimeout(resolve, 200));
             
             console.log(`🚗 Calculating route between selected locations...`);
-            const drivingTime = await this.calculateDrivingTime(fromCoords, toCoords);
+            const result = await this.calculateDrivingTime(fromCoords, toCoords);
+            const drivingTime = result.duration;
+            const distanceMiles = result.distanceMiles;
             
             console.log(`⏱️ Drive time calculated: ${drivingTime} minutes (${Utils.formatDriveTime(drivingTime)})`);
+            if (distanceMiles) {
+                console.log(`📏 Distance: ${Utils.formatMiles(distanceMiles)}`);
+            }
             console.log(`📋 Route summary: "${fromCoords.displayName}" → "${toCoords.displayName}" = ${Utils.formatDriveTime(drivingTime)}`);
             
             return {
                 duration: drivingTime,
+                distanceMiles: distanceMiles,
                 from: fromCoords,
                 to: toCoords,
                 routeSummary: `${fromCoords.displayName} → ${toCoords.displayName}`
@@ -519,14 +532,16 @@ class RoutingService {
                         toLocation.name
                     );
                     
-                    // Update the "to" location with the driving time
+                    // Update the "to" location with the driving time and distance
                     toLocation.drivingTime = result.duration;
+                    toLocation.drivingDistance = result.distanceMiles || 0;
                 }
             }
 
-            // First location has no driving time (starting point)
+            // First location has no driving time or distance (starting point)
             if (itinerary.locations[0]) {
                 itinerary.locations[0].drivingTime = 0;
+                itinerary.locations[0].drivingDistance = 0;
             }
 
             // Recalculate totals

@@ -29,19 +29,22 @@ class TripPlannerApp {
                 name: 'London',
                 day: 1,
                 nights: 2,
-                drivingTime: 0
+                drivingTime: 0,
+                drivingDistance: 0
             });
             sampleItinerary.addLocation({
                 name: 'Bath', 
                 day: 2,
                 nights: 1,
-                drivingTime: 120
+                drivingTime: 120,
+                drivingDistance: 105
             });
             sampleItinerary.addLocation({
                 name: 'Edinburgh', 
                 day: 3,
                 nights: 2,
-                drivingTime: 300
+                drivingTime: 300,
+                drivingDistance: 335
             });
             this.itineraries.push(sampleItinerary);
         }
@@ -323,7 +326,8 @@ class TripPlannerApp {
                 name: location.name,
                 day: location.day,
                 nights: location.nights,
-                drivingTime: location.drivingTime
+                drivingTime: location.drivingTime,
+                drivingDistance: location.drivingDistance
             });
         });
 
@@ -357,7 +361,8 @@ class TripPlannerApp {
             name: '',
             day: itinerary.locations.length + 1,
             nights: 1,
-            drivingTime: 0
+            drivingTime: 0,
+            drivingDistance: 0
         };
 
         itinerary.addLocation(newLocation);
@@ -488,6 +493,10 @@ class TripPlannerApp {
                     <span class="label">Drive Time</span>
                     <span class="value">${Utils.formatDriveTime(itinerary.getTotalDriveTime())}</span>
                 </div>
+                <div class="summary-stat">
+                    <span class="label">Distance</span>
+                    <span class="value">${Utils.formatMiles(itinerary.getTotalDriveDistance())}</span>
+                </div>
             `;
         }
     }
@@ -605,6 +614,11 @@ class TripPlannerApp {
                 if (driveTimeInput) {
                     driveTimeInput.value = location.drivingTime || 0;
                 }
+                const distanceDisplay = item.querySelector('.drive-distance-display');
+                if (distanceDisplay) {
+                    const dist = location.drivingDistance || 0;
+                    distanceDisplay.textContent = dist > 0 ? `(${Utils.formatMiles(dist)})` : '';
+                }
             }
         });
     }
@@ -661,7 +675,8 @@ class TripPlannerApp {
             
             if (fromLocation.name && toLocation.name && toLocation.drivingTime > 0) {
                 const driveTimeFormatted = Utils.formatDriveTime(toLocation.drivingTime);
-                routeDescriptions.push(`${fromLocation.name} → ${toLocation.name}: ${driveTimeFormatted}`);
+                const dist = toLocation.drivingDistance ? ` (${Utils.formatMiles(toLocation.drivingDistance)})` : '';
+                routeDescriptions.push(`${fromLocation.name} → ${toLocation.name}: ${driveTimeFormatted}${dist}`);
             }
         }
         
@@ -741,6 +756,10 @@ class TripPlannerApp {
                         <span class="label">Drive Time</span>
                         <span class="value">${Utils.formatDriveTime(itinerary.getTotalDriveTime())}</span>
                     </div>
+                    <div class="summary-stat">
+                        <span class="label">Distance</span>
+                        <span class="value">${Utils.formatMiles(itinerary.getTotalDriveDistance())}</span>
+                    </div>
                 </div>
                 <div class="itinerary-map">
                     <div class="leaflet-map-container">
@@ -773,6 +792,7 @@ class TripPlannerApp {
                     ` : ''}
                     <div class="location-drive-time">
                         🚙 <span class="drive-time-display">${Utils.formatDriveTime(location.drivingTime)}</span>
+                        ${!isFirst && location.drivingDistance ? ` <span class="drive-distance-display">(${Utils.formatMiles(location.drivingDistance)})</span>` : ''}
                         <input type="number" class="drive-time-input" value="${location.drivingTime}" min="0" max="1440" style="display: none;">
                         <button class="edit-drive-time-btn" title="Edit drive time">✏️</button>
                     </div>

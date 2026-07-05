@@ -110,6 +110,18 @@ class Utils {
         return `${hour12}:${minutes} ${ampm}`;
     }
 
+    // Convert meters to miles
+    static metersToMiles(meters) {
+        return Math.round(meters * 0.000621371);
+    }
+
+    // Format miles for display
+    static formatMiles(miles) {
+        if (!miles || miles === 0) return '';
+        if (miles < 1) return `${(Math.round(miles * 10) / 10)} mi`;
+        return `${miles} mi`;
+    }
+
     // Estimate driving time based on distance (very basic)
     static estimateDrivingMinutes(distanceKm) {
         // Assume average speed of 60 km/h including stops
